@@ -42,20 +42,20 @@ app.post('/sectors', function (req, res) {
     const postBody = req.body ? req.body : null;
     console.log(postBody);
     if (postBody) {
-        db.collection('sectors').doc(postBody.id).delete().then(ref => {
-            res.json({ message: ref.id });
+        db.collection('sectors').add({
+            name: postBody.name
+        }).then(ref => {
+            res.json({ id: ref.id });
         });
     }
 });
 
-app.delete('/sectors', function(req, res){
+app.delete('/sectors', function (req, res) {
     const postBody = req.body ? req.body : null;
     console.log(postBody);
     if (postBody) {
-        db.collection('sectors').delete({
-            name: postBody.name
-        }).then(ref => {
-            res.json({ id: ref.id });
+        db.collection('sectors').doc(postBody.id).delete().then(ref => {
+            res.json({ message: 'success' });
         });
     }
 });
