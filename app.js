@@ -8,12 +8,15 @@ admin.initializeApp({
 
 const db = admin.firestore();
 db.settings({ timestampsInSnapshots: true });
+const FieldValue = require('firebase-admin').firestore.FieldValue;
 
 var express = require('express');
+var cors = require('cors');
 const bodyParser = require('body-parser');
 var app = express();
 app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: false }));
+app.use(cors());
 
 app.get('/', function (req, res) {
     res.json({ message: "welcome" });
@@ -24,7 +27,7 @@ app.get('/sectors', function (req, res) {
 
     db.collection('sectors').get()
         .then((snapshot) => {
-            console.log(snapshot);
+            // console.log(snapshot);
             snapshot.forEach((doc) => {
                 console.log(doc.id, '=>', doc.data());
                 datas.push({ id: doc.id, data: doc.data() });
@@ -37,24 +40,73 @@ app.get('/sectors', function (req, res) {
         });
 });
 
-
-app.post('/sectors', function (req, res) {
-    const postBody = req.body ? req.body : null;
+app.get('/sectors/getById', function (req, res) {
+    var postBody = req.query ? req.query : null;
     console.log(postBody);
     if (postBody) {
-        db.collection('sectors').add({
+        db.collection('sectors').doc(postBody.id).get().then(doc => {
+            res.json(doc.data());
+        });
+    }
+});
+
+
+app.post('/sectors', function (req, res) {
+    var postBody = req.body ? req.body : null;
+    console.log(postBody);
+    if (postBody) {
+        var data = {
             name: postBody.name
-        }).then(ref => {
-            res.json({ id: ref.id });
+        };
+        db.collection('sectors').add(data).then(ref => {
+            res.json({ id: ref.id, data: data });
+        });
+    }
+});
+
+app.put('/sectors', function (req, res) {
+    var postBody = req.body ? req.body : null;
+    console.log(postBody);
+    if (postBody) {
+        var data = {
+            name: postBody.data.name
+        };
+        db.collection('sectors').doc(postBody.id).update(data).then(ref => {
+            res.json({ id: ref.id, data: data });
         });
     }
 });
 
 app.delete('/sectors', function (req, res) {
-    const postBody = req.body ? req.body : null;
+    var postBody = req.query ? req.query : null;
     console.log(postBody);
     if (postBody) {
-        db.collection('sectors').doc(postBody.id).delete().then(ref => {
+        db.collection('sectors').doc(postBody.id).delete().then(() => {
+            res.json({ message: 'success' });
+        });
+    }
+});
+
+app.post('/zones', function (req, res) {
+    var postBody = req.body ? req.body : null;
+    console.log(postBody);
+    if (postBody) {
+        var data = {
+            zones: postBody.data
+        };
+        db.collection('sectors').doc(postBody.id).update(data).then(() => {
+            res.json(postBody);
+        });
+    }
+});
+
+app.delete('/zones', function (req, res) {
+    var postBody = req.query ? req.query : null;
+    console.log(postBody);
+    if (postBody) {
+        db.collection('sectors').doc(postBody.id).update({
+            zones: JSON.parse(postBody.data)
+        }).then(() => {
             res.json({ message: 'success' });
         });
     }
