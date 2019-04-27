@@ -1,5 +1,7 @@
 var admin = require('firebase-admin');
 var serviceAccount = require("./serviceAccountKey.json");
+const http = require('http');
+
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
@@ -18,8 +20,35 @@ app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cors());
 
+
+
 app.get('/', function (req, res) {
     res.json({ message: "welcome" });
+});
+
+app.get('/sensors/:from', function (req, res) {
+    console.log('from: ' + req.params.from);
+    var date = new Date(+req.params.from).toISOString();
+    var dateString = '' + date;
+    console.log('http://165.227.145.200/logs-41238/?from=' + dateString.split('.')[0]);
+    
+    http.get('http://165.227.145.200/logs-41238/?from=' + dateString.split('.')[0], (resp) => {
+        let data = '';
+
+        // A chunk of data has been recieved.
+        resp.on('data', (chunk) => {
+            data += chunk;
+        });
+
+        // The whole response has been received. Print out the result.
+        resp.on('end', () => {
+            //console.log(JSON.parse(data).explanation);
+            res.json(JSON.parse(data));
+        });
+
+    }).on("error", (err) => {
+        console.log("Error: " + err.message);
+    });
 });
 
 app.get('/sectors', function (req, res) {
@@ -117,3 +146,9 @@ var server = app.listen(3000, function () {
     var port = server.address().port;
     console.log("Example app listening at localhost:%s", port);
 })
+
+
+
+
+
+
